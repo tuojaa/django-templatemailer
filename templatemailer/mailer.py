@@ -1,13 +1,7 @@
-import traceback
 import logging
 
 from django.core import mail
-from django.core.mail import send_mail
-
-from dashboard import settings
 from .tasks import task_email_user
-from .models import EmailTemplate
-from django.template import Template, Context
 
 logger = logging.getLogger(__name__)
 
