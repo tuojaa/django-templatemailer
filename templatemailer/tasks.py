@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
+import logging
 import mimetypes
 from os.path import basename
 
 from celery import shared_task
-import logging
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.storage import DefaultStorage
@@ -16,14 +15,15 @@ from .models import EmailTemplate
 
 logger = logging.getLogger(__name__)
 
+
 @shared_task
 def task_email_user(
         user_pk,
         template_key,
         context,
-        attachments = None,
-        delete_attachments_after_send = True,
-        language_code = None):
+        attachments=None,
+        delete_attachments_after_send=True,
+        language_code=None):
     '''
     Task to send email to user
 
@@ -32,7 +32,6 @@ def task_email_user(
     :param context: Context variables as a dictionary
     :param attachments: Attachments as list of tuples (name, mimetype)
     :param delete_attachments_after_send: True = delete attachments from storage after sending email
-    :param send_to: Override "to" address
     :param language_code: Language code for email template
     :return:
     '''
@@ -43,24 +42,22 @@ def task_email_user(
 
     DEFAULT_LANGUAGE_CODE = mailer_settings.get("DEFAULT_LANGUAGE_CODE", "en")
 
-
-
     if attachments is None:
         attachments = []
 
     try:
         user = User.objects.get(pk=user_pk)
-        recipients = [user.email,]
+        recipients = [user.email, ]
     except User.DoesNotExist:
-        recipients = [user_pk,]
+        recipients = [user_pk, ]
 
     if settings.DEBUG and not mailer_settings.get("FORCE_DEBUG_OFF"):
         recipients = mailer_settings.get("DEBUG_RECIPIENTS", map(lambda (name, email): email, settings.ADMINS))
 
     try:
-        email_template = EmailTemplate.objects.get(key = template_key, language_code = language_code)
+        email_template = EmailTemplate.objects.get(key=template_key, language_code=language_code)
     except:
-        email_template = EmailTemplate.objects.get(key = template_key, language_code = DEFAULT_LANGUAGE_CODE)
+        email_template = EmailTemplate.objects.get(key=template_key, language_code=DEFAULT_LANGUAGE_CODE)
 
     text_template = Template(email_template.plain_text)
     template_context = Context(context)

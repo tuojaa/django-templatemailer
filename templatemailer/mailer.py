@@ -1,11 +1,14 @@
 import logging
 
 from django.core import mail
+
 from .tasks import task_email_user
 
 logger = logging.getLogger(__name__)
 
-def email_user(user, template, context, attachments = None, delete_attachments_after_send = False, send_to = None, language_code = None):
+
+def email_user(user, template, context, attachments=None, delete_attachments_after_send=False, send_to=None,
+               language_code=None):
     '''
     Send email to user
 
@@ -32,8 +35,8 @@ def email_user(user, template, context, attachments = None, delete_attachments_a
         user.pk if user else None,
         template,
         context,
-        attachments = attachments,
-        delete_attachments_after_send = delete_attachments_after_send,
+        attachments=attachments,
+        delete_attachments_after_send=delete_attachments_after_send,
         send_to=send_to,
-        language_code =language_code
+        language_code=language_code
     )
