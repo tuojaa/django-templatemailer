@@ -29,9 +29,14 @@ def send_email(user, template, context, attachments=None, delete_attachments_aft
         ### otherwise, defer sending email to celery
         send_email_f = task_email_user.delay
 
+    try:
+        user = user.pk
+    except AttributeError:
+        pass
+
     ### send email
     send_email_f(
-        user.pk if user else None,
+        user,
         template,
         context,
         attachments=attachments,
