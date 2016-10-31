@@ -6,7 +6,7 @@ setup(name='django-templatemailer',
       author='Tuomas Jaanu',
       author_email='tuomas@jaa.nu',
       url='https://github.com/tuomasjaanu/django-templatemailer',
-      packages=['templatemailer', ],
+      packages=['templatemailer', 'templatemailer.migrations'],
       install_requires=[
           "django-celery",
           "django",
