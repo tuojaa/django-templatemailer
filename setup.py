@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='django-templatemailer',
-      version='0.0.5',
+      version='0.0.6',
       description='Django component that is used to send emails using template engine',
       author='Tuomas Jaanu',
       author_email='tuomas@jaa.nu',

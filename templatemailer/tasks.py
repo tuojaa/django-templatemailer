@@ -50,6 +50,8 @@ def task_email_user(
         recipients = [user.email, ]
     except User.DoesNotExist:
         recipients = [user_pk, ]
+    except ValueError:
+        recipients = [user_pk, ]
 
     if settings.DEBUG and not mailer_settings.get("FORCE_DEBUG_OFF"):
         recipients = mailer_settings.get("DEBUG_RECIPIENTS", map(lambda (name, email): email, settings.ADMINS))
