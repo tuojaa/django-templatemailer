@@ -30,13 +30,13 @@ def send_email(user, template, context, attachments=None, delete_attachments_aft
         send_email_f = task_email_user.delay
 
     try:
-        user = user.pk
+        user_email = user.email
     except AttributeError:
-        pass
+        user_email = user
 
     ### send email
     send_email_f(
-        user,
+        user_email,
         template,
         context,
         attachments=attachments,

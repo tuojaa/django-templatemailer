@@ -6,7 +6,6 @@ from os.path import basename
 
 from celery import shared_task
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.files.storage import DefaultStorage
 from django.core.mail import get_connection, EmailMultiAlternatives
 from django.template import Template, Context
@@ -35,6 +34,8 @@ def task_email_user(
     :param language_code: Language code for email template
     :return:
     '''
+    headers = {}
+
     try:
         mailer_settings = settings.TEMPLATEMAILER
     except:
@@ -45,15 +46,10 @@ def task_email_user(
     if attachments is None:
         attachments = []
 
-    try:
-        user = User.objects.get(pk=user_pk)
-        recipients = [user.email, ]
-    except User.DoesNotExist:
-        recipients = [user_pk, ]
-    except ValueError:
-        recipients = [user_pk, ]
+    recipients = [user_pk, ]
 
     if settings.DEBUG and not mailer_settings.get("FORCE_DEBUG_OFF"):
+        headers['X-DjangoTemplateMailer-Original-Recipients'] = ','.join(recipients)
         recipients = mailer_settings.get("DEBUG_RECIPIENTS", map(lambda (name, email): email, settings.ADMINS))
 
     try:
