@@ -22,7 +22,8 @@ def task_email_user(
         context,
         attachments=None,
         delete_attachments_after_send=True,
-        language_code=None):
+        language_code=None,
+        email_from=None):
     '''
     Task to send email to user
 
@@ -71,11 +72,13 @@ def task_email_user(
     subject_template = Template(email_template.subject)
     subject = subject_template.render(template_context)
 
+    email_from = email_from or mailer_settings.get("FROM", map(lambda (name, email): email, settings.ADMINS)[0])
+
     connection = get_connection()
     mail = EmailMultiAlternatives(
         subject=subject,
         body=text_body,
-        from_email=mailer_settings.get("FROM", map(lambda (name, email): email, settings.ADMINS)[0]),
+        from_email=email_from,
         to=recipients,
         connection=connection)
 

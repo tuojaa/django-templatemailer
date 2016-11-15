@@ -7,8 +7,13 @@ from .tasks import task_email_user
 logger = logging.getLogger(__name__)
 
 
-def send_email(user, template, context, attachments=None, delete_attachments_after_send=False,
-               language_code=None):
+def send_email(user,
+               template,
+               context,
+               attachments=None,
+               delete_attachments_after_send=False,
+               language_code=None,
+               email_from=None):
     '''
     Send email to user
 
@@ -18,6 +23,7 @@ def send_email(user, template, context, attachments=None, delete_attachments_aft
     :param attachments: List of attachments
     :param delete_attachments_after_send: If true, delete attachments from storage after sending
     :param language_code: Language code for template
+    :param email_from: Optional override for email FROM field
     :return:
     '''
 
@@ -41,5 +47,6 @@ def send_email(user, template, context, attachments=None, delete_attachments_aft
         context,
         attachments=attachments,
         delete_attachments_after_send=delete_attachments_after_send,
-        language_code=language_code
+        language_code=language_code,
+        email_from=email_from
     )
