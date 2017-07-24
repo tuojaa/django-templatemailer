@@ -6,7 +6,9 @@ from os.path import basename
 
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
-from django.core.mail import get_connection, EmailMultiAlternatives
+from django.core.mail import  EmailMultiAlternatives
+from django.core import mail
+
 from django.template import Template, Context
 
 from .models import EmailTemplate
@@ -14,17 +16,18 @@ from .models import EmailTemplate
 logger = logging.getLogger(__name__)
 
 
+def identity(ob):
+    return ob
 
-if settings.TEMPLATEMAILER_ASYNC = "CELERY":
+if hasattr(mail, 'outbox'):
+    decorator = identity
+elif settings.TEMPLATEMAILER_ASYNC = "CELERY":
     from celery import shared_task
     decorator = shared_task
-
 elif settings.TEMPLATEMAILER_ASYNC = "ZAPPA":
     from zappa.async import task
     decorator = task
 else:
-    def identity(ob):
-        return ob
     decorator = identity
 
 @decorator
@@ -86,8 +89,8 @@ def task_email_user(
 
     email_from = email_from or mailer_settings.get("FROM", map(lambda (name, email): email, settings.ADMINS)[0])
 
-    connection = get_connection()
-    mail = EmailMultiAlternatives(
+    connection = mail.get_connection()
+    email = mail.EmailMultiAlternatives(
         subject=subject,
         body=text_body,
         from_email=email_from,
@@ -95,7 +98,7 @@ def task_email_user(
         connection=connection)
 
     if html_body:
-        mail.attach_alternative(html_body, 'text/html')
+        email.attach_alternative(html_body, 'text/html')
 
     storage = DefaultStorage()
 
@@ -103,12 +106,12 @@ def task_email_user(
         mimetype, att_encoding = mimetypes.guess_type(email_template.attachment.name)
         name = email_template.attachment.name
         f = storage.open(name)
-        mail.attach(basename(name), f.read(), mimetype)
+        email.attach(basename(name), f.read(), mimetype)
 
     for (name, mimetype) in attachments:
         f = storage.open(name)
-        mail.attach(basename(name), f.read(), mimetype)
+        email.attach(basename(name), f.read(), mimetype)
         if delete_attachments_after_send:
             storage.delete(name)
 
-    mail.send()
+    email.send()
