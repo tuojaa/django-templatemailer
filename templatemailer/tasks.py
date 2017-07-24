@@ -4,7 +4,6 @@ import logging
 import mimetypes
 from os.path import basename
 
-from celery import shared_task
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.mail import get_connection, EmailMultiAlternatives
@@ -15,7 +14,20 @@ from .models import EmailTemplate
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+
+if settings.TEMPLATEMAILER_ASYNC = "CELERY":
+    from celery import shared_task
+    decorator = shared_task
+
+elif settings.TEMPLATEMAILER_ASYNC = "ZAPPA":
+    from zappa.async import task
+    decorator = task
+else:
+    def identity(ob):
+        return ob
+    decorator = identity
+
+@decorator
 def task_email_user(
         user_pk,
         template_key,
