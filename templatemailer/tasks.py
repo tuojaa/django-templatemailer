@@ -21,10 +21,10 @@ def identity(ob):
 
 if hasattr(mail, 'outbox'):
     decorator = identity
-elif settings.TEMPLATEMAILER_ASYNC = "CELERY":
+elif settings.TEMPLATEMAILER_ASYNC == "CELERY":
     from celery import shared_task
     decorator = shared_task
-elif settings.TEMPLATEMAILER_ASYNC = "ZAPPA":
+elif settings.TEMPLATEMAILER_ASYNC == "ZAPPA":
     from zappa.async import task
     decorator = task
 else:
