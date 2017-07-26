@@ -6,7 +6,7 @@ from os.path import basename
 
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
-from django.core.mail import  EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
 from django.core import mail
 
 from django.template import Template, Context
@@ -19,18 +19,24 @@ logger = logging.getLogger(__name__)
 def identity(ob):
     return ob
 
-if hasattr(mail, 'outbox'):
-    decorator = identity
-elif settings.TEMPLATEMAILER_ASYNC == "CELERY":
-    from celery import shared_task
-    decorator = shared_task
-elif settings.TEMPLATEMAILER_ASYNC == "ZAPPA":
-    from zappa.async import task
-    decorator = task
-else:
-    decorator = identity
 
-@decorator
+def _a(*args, **kwargs):
+
+    if hasattr(mail, 'outbox'):
+        a = identity
+    elif settings.TEMPLATEMAILER_ASYNC == "CELERY":
+        from celery import shared_task
+        a = shared_task
+    elif settings.TEMPLATEMAILER_ASYNC == "ZAPPA":
+        from zappa.async import task
+        a = task
+    else:
+        a = identity
+
+    return a(*args, **kwargs)
+
+
+@_a
 def task_email_user(
         user_pk,
         template_key,
@@ -65,13 +71,17 @@ def task_email_user(
     recipients = [user_pk, ]
 
     if settings.DEBUG and not mailer_settings.get("FORCE_DEBUG_OFF"):
-        headers['X-DjangoTemplateMailer-Original-Recipients'] = ','.join(recipients)
-        recipients = mailer_settings.get("DEBUG_RECIPIENTS", map(lambda (name, email): email, settings.ADMINS))
+        headers['X-DjangoTemplateMailer-Original-Recipients'] = ','.join(
+            recipients)
+        recipients = mailer_settings.get(
+            "DEBUG_RECIPIENTS", map(lambda (name, email): email, settings.ADMINS))
 
     try:
-        email_template = EmailTemplate.objects.get(key=template_key, language_code=language_code)
+        email_template = EmailTemplate.objects.get(
+            key=template_key, language_code=language_code)
     except:
-        email_template = EmailTemplate.objects.get(key=template_key, language_code=DEFAULT_LANGUAGE_CODE)
+        email_template = EmailTemplate.objects.get(
+            key=template_key, language_code=DEFAULT_LANGUAGE_CODE)
 
     text_template = Template(email_template.plain_text)
     template_context = Context(context)
@@ -87,7 +97,8 @@ def task_email_user(
     subject_template = Template(email_template.subject)
     subject = subject_template.render(template_context)
 
-    email_from = email_from or mailer_settings.get("FROM", map(lambda (name, email): email, settings.ADMINS)[0])
+    email_from = email_from or mailer_settings.get(
+        "FROM", map(lambda (name, email): email, settings.ADMINS)[0])
 
     connection = mail.get_connection()
     email = mail.EmailMultiAlternatives(
@@ -103,7 +114,8 @@ def task_email_user(
     storage = DefaultStorage()
 
     if email_template.attachment:
-        mimetype, att_encoding = mimetypes.guess_type(email_template.attachment.name)
+        mimetype, att_encoding = mimetypes.guess_type(
+            email_template.attachment.name)
         name = email_template.attachment.name
         f = storage.open(name)
         email.attach(basename(name), f.read(), mimetype)
