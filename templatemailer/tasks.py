@@ -16,20 +16,23 @@ from .models import EmailTemplate
 logger = logging.getLogger(__name__)
 
 
+try:
+    from celery import shared_task
+except:
+    pass
+
 def identity(ob):
     return ob
 
-
 def _a(*args, **kwargs):
+
+    mailer_settings = settings.TEMPLATEMAILER
+
 
     if hasattr(mail, 'outbox'):
         a = identity
-    elif settings.TEMPLATEMAILER_ASYNC == "CELERY":
-        from celery import shared_task
+    elif mailer_settings.get("TEMPLATEMAILER_USE_CELERY", False):
         a = shared_task
-    elif settings.TEMPLATEMAILER_ASYNC == "ZAPPA":
-        from zappa.async import task
-        a = task
     else:
         a = identity
 

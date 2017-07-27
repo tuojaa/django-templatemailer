@@ -29,10 +29,9 @@ def send_email(user,
 
     send_email_f = task_email_user
 
-    if settings.TEMPLATEMAILER_ASYNC == "CELERY":
+    mailer_settings = settings.TEMPLATEMAILER
+    if mailer_settings.get("TEMPLATEMAILER_USE_CELERY", False):
         send_email_f = task_email_user.delay
-    elif settings.TEMPLATEMAILER_ASYNC == "ZAPPA":
-        send_email_f = task_email_user
 
     try:
         user_email = user.email
