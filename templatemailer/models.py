@@ -16,4 +16,5 @@ class EmailTemplate(models.Model):
 
     language_code = models.CharField(max_length=16, default="en")
 
-    def __unicode__(self): return self.key
+    def __unicode__(self):
+        return self.key
