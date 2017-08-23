@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import logging
 import mimetypes
@@ -76,8 +75,7 @@ def task_email_user(
     if settings.DEBUG and not mailer_settings.get("FORCE_DEBUG_OFF"):
         headers['X-DjangoTemplateMailer-Original-Recipients'] = ','.join(
             recipients)
-        recipients = mailer_settings.get(
-            "DEBUG_RECIPIENTS", map(lambda (name, email): email, settings.ADMINS))
+        recipients = mailer_settings.get("DEBUG_RECIPIENTS", [name_email[1] for name_email in settings.ADMINS])
 
     try:
         email_template = EmailTemplate.objects.get(
@@ -101,7 +99,7 @@ def task_email_user(
     subject = subject_template.render(template_context)
 
     email_from = email_from or mailer_settings.get(
-        "FROM", map(lambda (name, email): email, settings.ADMINS)[0])
++       "FROM", map(lambda name_email1: name_email1[1], settings.ADMINS)[0])
 
     connection = mail.get_connection()
     email = mail.EmailMultiAlternatives(
