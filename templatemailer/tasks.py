@@ -99,12 +99,18 @@ def task_email_user(user_pk,
     subject_template = Template(email_template.subject)
     subject = subject_template.render(template_context)
 
-    email_from = email_from or mailer_settings.get(+ "FROM",
-                                                   map(lambda name_email1: name_email1[1], settings.ADMINS)[0])
+    email_from = email_from or mailer_settings.get("FROM",
+                                                   list(map(lambda name_email1: name_email1[1], settings.ADMINS))[0])
 
     connection = mail.get_connection()
     email = mail.EmailMultiAlternatives(
-        subject=subject, body=text_body, headers=headers, reply_to=reply_to, from_email=email_from, to=recipients, connection=connection)
+        subject=subject,
+        body=text_body,
+        headers=headers,
+        reply_to=reply_to,
+        from_email=email_from,
+        to=recipients,
+        connection=connection)
 
     if html_body:
         email.attach_alternative(html_body, 'text/html')
