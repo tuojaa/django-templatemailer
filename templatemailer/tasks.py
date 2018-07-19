@@ -1,4 +1,3 @@
-
 import logging
 import mimetypes
 from os.path import basename
@@ -14,19 +13,19 @@ from .models import EmailTemplate
 
 logger = logging.getLogger(__name__)
 
-
 try:
     from celery import shared_task
 except:
     pass
 
+
 def identity(ob):
     return ob
+
 
 def _a(*args, **kwargs):
 
     mailer_settings = settings.TEMPLATEMAILER
-
 
     if hasattr(mail, 'outbox'):
         a = identity
@@ -39,14 +38,15 @@ def _a(*args, **kwargs):
 
 
 @_a
-def task_email_user(
-        user_pk,
-        template_key,
-        context,
-        attachments=None,
-        delete_attachments_after_send=True,
-        language_code=None,
-        email_from=None):
+def task_email_user(user_pk,
+                    template_key,
+                    context,
+                    attachments=None,
+                    delete_attachments_after_send=True,
+                    language_code=None,
+                    email_from=None,
+                    headers=None,
+                    reply_to=None):
     '''
     Task to send email to user
 
@@ -58,7 +58,9 @@ def task_email_user(
     :param language_code: Language code for email template
     :return:
     '''
-    headers = {}
+
+    if headers is None:
+        headers = {}
 
     try:
         mailer_settings = settings.TEMPLATEMAILER
@@ -70,19 +72,18 @@ def task_email_user(
     if attachments is None:
         attachments = []
 
-    recipients = [user_pk, ]
+    recipients = [
+        user_pk,
+    ]
 
     if settings.DEBUG and not mailer_settings.get("FORCE_DEBUG_OFF"):
-        headers['X-DjangoTemplateMailer-Original-Recipients'] = ','.join(
-            recipients)
+        headers['X-DjangoTemplateMailer-Original-Recipients'] = ','.join(recipients)
         recipients = mailer_settings.get("DEBUG_RECIPIENTS", [name_email[1] for name_email in settings.ADMINS])
 
     try:
-        email_template = EmailTemplate.objects.get(
-            key=template_key, language_code=language_code)
+        email_template = EmailTemplate.objects.get(key=template_key, language_code=language_code)
     except:
-        email_template = EmailTemplate.objects.get(
-            key=template_key, language_code=DEFAULT_LANGUAGE_CODE)
+        email_template = EmailTemplate.objects.get(key=template_key, language_code=DEFAULT_LANGUAGE_CODE)
 
     text_template = Template(email_template.plain_text)
     template_context = Context(context)
@@ -98,16 +99,12 @@ def task_email_user(
     subject_template = Template(email_template.subject)
     subject = subject_template.render(template_context)
 
-    email_from = email_from or mailer_settings.get(
-+       "FROM", map(lambda name_email1: name_email1[1], settings.ADMINS)[0])
+    email_from = email_from or mailer_settings.get(+ "FROM",
+                                                   map(lambda name_email1: name_email1[1], settings.ADMINS)[0])
 
     connection = mail.get_connection()
     email = mail.EmailMultiAlternatives(
-        subject=subject,
-        body=text_body,
-        from_email=email_from,
-        to=recipients,
-        connection=connection)
+        subject=subject, body=text_body, headers=headers, reply_to=reply_to, from_email=email_from, to=recipients, connection=connection)
 
     if html_body:
         email.attach_alternative(html_body, 'text/html')
@@ -115,8 +112,7 @@ def task_email_user(
     storage = DefaultStorage()
 
     if email_template.attachment:
-        mimetype, att_encoding = mimetypes.guess_type(
-            email_template.attachment.name)
+        mimetype, att_encoding = mimetypes.guess_type(email_template.attachment.name)
         name = email_template.attachment.name
         f = storage.open(name)
         email.attach(basename(name), f.read(), mimetype)
