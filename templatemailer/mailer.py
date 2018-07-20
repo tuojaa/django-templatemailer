@@ -13,7 +13,10 @@ def send_email(user,
                attachments=None,
                delete_attachments_after_send=False,
                language_code=None,
-               email_from=None):
+               email_from=None,
+               headers=None,
+               reply_to=None
+               ):
     '''
     Send email to user
 
@@ -47,4 +50,6 @@ def send_email(user,
         delete_attachments_after_send=delete_attachments_after_send,
         language_code=language_code,
         email_from=email_from
+        headers=headers,
+        reply_to=reply_to
     )
