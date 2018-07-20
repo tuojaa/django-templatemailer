@@ -49,7 +49,7 @@ def send_email(user,
         attachments=attachments,
         delete_attachments_after_send=delete_attachments_after_send,
         language_code=language_code,
-        email_from=email_from
+        email_from=email_from,
         headers=headers,
         reply_to=reply_to
     )
